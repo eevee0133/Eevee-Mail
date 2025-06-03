@@ -1,37 +1,39 @@
-// Configurações
-const NEWS_CONTAINER = document.getElementById("news-container");
-const LOADING_MSG = "<p>Carregando notícias do Serebii...</p>";
-const ERROR_MSG = "<p>Não foi possível carregar as notícias. Tente novamente mais tarde.</p>";
+// server.js (seu backend Node.js)
+const express = require('express');
+const axios = require('axios');
+const cheerio = require('cheerio');
+const cors = require('cors');
 
-// URL direta do Serebii
-const SEREBII_NEWS_URL = "https://www.serebii.net/index2.shtml";
+const app = express();
+app.use(cors());
 
-async function fetchSerebiiNews() {
-    NEWS_CONTAINER.innerHTML = LOADING_MSG;
-
+app.get('/api/serebii-news', async (req, res) => {
     try {
-        // Modo 'no-cors' - limitado, só funciona para alguns casos
-        const response = await fetch(SEREBII_NEWS_URL, {
-            mode: 'no-cors'
+        const response = await axios.get('https://www.serebii.net/index2.shtml');
+        const $ = cheerio.load(response.data);
+        
+        const newsItems = [];
+        $('td.foopicnoborder table tr:not(:first-child)').each((index, element) => {
+            if (index > 5) return;
+            
+            const title = $(element).find('td:last-child font b').text().trim() || "Sem título";
+            const link = $(element).find('a').attr('href') || "#";
+            const date = $(element).find('td:last-child font:nth-child(2)').text().trim() || "";
+            
+            newsItems.push({
+                title,
+                link: link.startsWith('http') ? link : `https://www.serebii.net${link}`,
+                date,
+                imageUrl: 'https://www.serebii.net/shiny/eevee.png'
+            });
         });
         
-        // Note que no modo 'no-cors' você não pode ler a resposta diretamente
-        // Você precisaria de uma abordagem diferente aqui
-        console.log("Requisição enviada, mas a resposta não pode ser lida devido ao CORS");
-        
-        // Alternativa: usar um iframe
-        NEWS_CONTAINER.innerHTML = `
-            <iframe 
-                src="${SEREBII_NEWS_URL}" 
-                style="width:100%; height:500px; border:none;"
-                onload="console.log('Conteúdo carregado')"
-                onerror="document.getElementById('news-container').innerHTML = '${ERROR_MSG}'">
-            </iframe>
-        `;
+        res.json({ newsItems });
     } catch (error) {
-        console.error("Erro ao buscar notícias:", error);
-        NEWS_CONTAINER.innerHTML = ERROR_MSG;
+        console.error('Error fetching Serebii news:', error);
+        res.status(500).json({ error: 'Failed to fetch news' });
     }
-}
+});
 
-window.onload = fetchSerebiiNews;
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
