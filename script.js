@@ -4,7 +4,7 @@ const LOADING_MSG = "<p>Carregando notícias do Serebii...</p>";
 const ERROR_MSG = "<p>Não foi possível carregar as notícias. Tente novamente mais tarde.</p>";
 
 // URL do proxy para scraping do Serebii (exemplo com CORS Anywhere)
-const SEREBII_NEWS_URL = "https://cors-anywhere.herokuapp.com/https://www.serebii.net/index2.shthttps://www.serebii.net/index2.shtml";
+const SEREBII_NEWS_URL = "https://cors-anywhere.herokuapp.com/https://www.serebii.net/index2.shtml";
 
 async function fetchSerebiiNews() {
     NEWS_CONTAINER.innerHTML = LOADING_MSG;
